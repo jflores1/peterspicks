@@ -1,16 +1,122 @@
 ---
+import { getCollection } from "astro:content";
+import Layout from "../layouts/Layout.astro";
+import CardinalCard from "../components/CardinalCard/CardinalCard.astro";
 
+const cardinals = await getCollection("cardinals");
+const sortedCardinals = cardinals.sort((a, b) => {
+    // Sort by papabile first, then by probability
+    if (a.data.is_papabile && !b.data.is_papabile) return -1;
+    if (!a.data.is_papabile && b.data.is_papabile) return 1;
+    return (b.data.papal_probability || 0) - (a.data.papal_probability || 0);
+});
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<Layout title="Conclave Tracker">
+    <main>
+        <h1>2024 Papal Conclave Tracker</h1>
+        <p class="subtitle">
+            Tracking the Cardinals who will elect the next Pope
+        </p>
+
+        <div class="stats-banner">
+            <div class="stat">
+                <span class="value">{cardinals.length}</span>
+                <span class="label">Cardinals</span>
+            </div>
+            <div class="stat">
+                <span class="value"
+                    >{cardinals.filter((c) => c.data.is_papabile).length}</span
+                >
+                <span class="label">Papabili</span>
+            </div>
+            <div class="stat">
+                <span class="value"
+                    >{
+                        Math.floor(
+                            cardinals.reduce((sum, c) => sum + c.data.age, 0) /
+                                cardinals.length,
+                        )
+                    }</span
+                >
+                <span class="label">Avg. Age</span>
+            </div>
+        </div>
+
+        <section class="filter-section">
+            <h2>Cardinals Explorer</h2>
+            <!-- We'll add filters later -->
+        </section>
+
+        <section class="cardinals-grid">
+            {
+                sortedCardinals.map((cardinal) => (
+                    <CardinalCard cardinal={cardinal} />
+                ))
+            }
+        </section>
+    </main>
+</Layout>
+
+<style>
+    main {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    h1 {
+        color: #722f37;
+        text-align: center;
+        margin-bottom: 8px;
+    }
+
+    .subtitle {
+        text-align: center;
+        color: #555;
+        margin-top: 0;
+        margin-bottom: 30px;
+    }
+
+    .stats-banner {
+        display: flex;
+        justify-content: space-around;
+        background-color: #f8f8f8;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 30px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .stats-banner .stat {
+        text-align: center;
+    }
+
+    .stats-banner .value {
+        display: block;
+        font-size: 2rem;
+        font-weight: bold;
+        color: #722f37;
+    }
+
+    .stats-banner .label {
+        font-size: 1rem;
+        color: #555;
+    }
+
+    .filter-section {
+        margin-bottom: 30px;
+    }
+
+    .cardinals-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(600px, 1fr));
+        gap: 20px;
+    }
+
+    @media (max-width: 768px) {
+        .cardinals-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
