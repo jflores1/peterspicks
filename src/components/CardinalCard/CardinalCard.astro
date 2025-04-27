@@ -4,6 +4,15 @@ export interface Props {
 }
 
 const { cardinal } = Astro.props;
+
+// Convert papal probability to stars (1-5)
+const getStarRating = (probability) => {
+    if (!probability) return 0;
+    // Scale from 0-1 to 1-5 stars
+    return Math.max(1, Math.min(5, Math.round(probability * 5)));
+};
+
+const starRating = getStarRating(cardinal.data.papal_probability);
 ---
 
 <div class="cardinal-card">
@@ -26,23 +35,30 @@ const { cardinal } = Astro.props;
                 <span class="label">Cardinal since:</span>
                 <span class="value">{cardinal.data.created_cardinal}</span>
             </div>
-            {
-                cardinal.data.papal_probability && (
-                    <div class="stat">
-                        <span class="label">Papal Probability:</span>
-                        <span class="value">
-                            {(cardinal.data.papal_probability * 100).toFixed(1)}
-                            %
-                        </span>
-                    </div>
-                )
-            }
         </div>
+
         {
             cardinal.data.is_papabile && (
-                <div class="papabile-badge">Papabile</div>
+                <div class="papabile-section">
+                    <div class="papabile-badge">Papabile</div>
+                    <div
+                        class="star-rating"
+                        title={`${(cardinal.data.papal_probability * 100).toFixed(1)}% likelihood`}
+                    >
+                        {Array(5)
+                            .fill(0)
+                            .map((_, i) => (
+                                <span
+                                    class={`star ${i < starRating ? "filled" : "empty"}`}
+                                >
+                                    ★
+                                </span>
+                            ))}
+                    </div>
+                </div>
             )
         }
+
         <div class="tags">
             {
                 cardinal.data.tags &&
@@ -113,6 +129,12 @@ const { cardinal } = Astro.props;
         color: #555;
     }
 
+    .papabile-section {
+        display: flex;
+        align-items: center;
+        margin-bottom: 12px;
+    }
+
     .papabile-badge {
         display: inline-block;
         background: #722f37;
@@ -120,7 +142,24 @@ const { cardinal } = Astro.props;
         padding: 3px 8px;
         border-radius: 4px;
         font-size: 0.8rem;
-        margin-bottom: 8px;
+        margin-right: 8px;
+    }
+
+    .star-rating {
+        display: inline-flex;
+    }
+
+    .star {
+        font-size: 1.2rem;
+        padding: 0 2px;
+    }
+
+    .star.filled {
+        color: #ffd700; /* Gold color for filled stars */
+    }
+
+    .star.empty {
+        color: #ccc; /* Light gray for empty stars */
     }
 
     .tags {
