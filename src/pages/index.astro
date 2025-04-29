@@ -247,6 +247,142 @@ const avgAge = Math.round(
         border-radius: 8px;
     }
 
+    /* Card Grid Layout */
+    .ais-Hits-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1.5rem;
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .ais-Hits-item {
+        margin: 0;
+        padding: 0;
+        box-shadow: none;
+        border: none;
+        background: transparent;
+    }
+
+    /* Cardinal Card Styling */
+    /* Cardinal Card Styling - update this rule first */
+    .cardinal-card {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transition:
+            transform 0.3s ease,
+            box-shadow 0.3s ease;
+        background-color: white;
+        position: relative; /* Add this line to create a positioning context */
+    }
+
+    .cardinal-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+    }
+
+    .card-header {
+        color: white;
+        padding: 1rem;
+        text-align: center;
+    }
+
+    .cardinal-name {
+        margin: 0;
+        font-size: 1.3rem;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .cardinal-title {
+        margin: 0.5rem 0 0;
+        font-size: 0.9rem;
+        opacity: 0.9;
+    }
+
+    .card-content {
+        display: grid;
+        grid-template-columns: 100px 1fr;
+        gap: 1rem;
+        padding: 1rem;
+        flex: 1;
+    }
+
+    .card-image {
+        width: 100%;
+        display: flex;
+        align-items: center;
+    }
+
+    .card-image img {
+        width: 100%;
+        aspect-ratio: 1/1;
+        object-fit: cover;
+        border-radius: 4px;
+        border: 2px solid #f0f0f0;
+    }
+
+    .cardinal-details {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .cardinal-details p {
+        margin: 0;
+        font-size: 0.85rem;
+        color: #444;
+    }
+
+    .papabile-value {
+        background-color: #fff7e6;
+        padding: 0.15rem 0.4rem;
+        border-radius: 4px;
+        font-weight: bold;
+        font-size: 0.8rem;
+        display: inline-block;
+        margin-left: 0.25rem;
+    }
+
+    .card-footer {
+        padding: 0.75rem 1rem;
+        border-top: 1px solid #f0f0f0;
+        text-align: center;
+    }
+
+    .view-button {
+        display: inline-block;
+        padding: 0.4rem 1rem;
+        background-color: #cc0000;
+        color: white;
+        text-decoration: none;
+        border-radius: 4px;
+        font-weight: bold;
+        font-size: 0.9rem;
+        transition: background-color 0.2s ease;
+    }
+
+    .view-button:hover {
+        background-color: #aa0000;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .ais-Hits-list {
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        }
+
+        .card-content {
+            grid-template-columns: 80px 1fr;
+        }
+    }
+
     /* InstantSearch overrides */
     .ais-SearchBox-form {
         display: flex;
@@ -323,6 +459,431 @@ const avgAge = Math.round(
     .ais-ClearRefinements-button--disabled {
         opacity: 0.5;
         cursor: not-allowed;
+    }
+
+    /* Modern Facet Sidebar Styling */
+    .search-panel__filters {
+        padding: 1.25rem;
+        background-color: #f8f8f8;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .search-panel__filters h2 {
+        margin-top: 0;
+        margin-bottom: 1rem;
+        font-size: 1.2rem;
+        color: #722f37;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid #e8e8e8;
+    }
+
+    /* Fix the bullet points */
+    .ais-RefinementList-list,
+    .ais-Menu-list {
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    /* Improve refinement item styling */
+    .ais-RefinementList-item,
+    .ais-Menu-item {
+        margin-bottom: 0.5rem;
+        padding: 0.25rem 0;
+    }
+
+    .ais-RefinementList-label,
+    .ais-Menu-label {
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+    }
+
+    .ais-RefinementList-checkbox,
+    .ais-Menu-checkbox {
+        margin-right: 8px;
+        cursor: pointer;
+        width: 16px;
+        height: 16px;
+    }
+
+    /* Style the count as a modern pill/label */
+    .ais-RefinementList-count,
+    .ais-Menu-count {
+        margin-left: 6px;
+        padding: 0.2rem 0.5rem;
+        border-radius: 12px;
+        background-color: #e8e8e8;
+        color: #555;
+        font-size: 0.75rem;
+        min-width: 24px;
+        text-align: center;
+        display: inline-block;
+    }
+
+    /* Selected item styling */
+    .ais-RefinementList-item--selected,
+    .ais-Menu-item--selected {
+        font-weight: bold;
+    }
+
+    .ais-RefinementList-item--selected .ais-RefinementList-count,
+    .ais-Menu-item--selected .ais-Menu-count {
+        background-color: #cc0000;
+        color: white;
+    }
+
+    /* Modern button styling for all buttons in the facet area */
+    .ais-SearchBox-submit,
+    .ais-SearchBox-reset,
+    .ais-RefinementList-showMore,
+    .ais-Menu-showMore,
+    .ais-ClearRefinements-button {
+        border: none;
+        background: #722f37;
+        color: white;
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .ais-SearchBox-submit:hover,
+    .ais-SearchBox-reset:hover,
+    .ais-RefinementList-showMore:hover,
+    .ais-Menu-showMore:hover,
+    .ais-ClearRefinements-button:hover {
+        background: #8c1a1a;
+    }
+
+    /* Specific styling for search box buttons */
+    .ais-SearchBox-submit,
+    .ais-SearchBox-reset {
+        padding: 0 12px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Specific styles for Show More button */
+    .ais-RefinementList-showMore,
+    .ais-Menu-showMore {
+        margin-top: 0.5rem;
+        width: 100%;
+        font-size: 0.85rem;
+        background-color: #f0f0f0;
+        color: #555;
+        border: 1px solid #ddd;
+        box-shadow: none;
+    }
+
+    .ais-RefinementList-showMore:hover,
+    .ais-Menu-showMore:hover {
+        background-color: #e0e0e0;
+        color: #333;
+    }
+
+    /* Improve the Clear Refinements button */
+    .ais-ClearRefinements {
+        margin-top: 1.5rem;
+    }
+
+    .ais-ClearRefinements-button {
+        width: 100%;
+        background-color: #cc0000;
+        border: none;
+        transition: background-color 0.2s ease;
+    }
+
+    .ais-ClearRefinements-button:hover {
+        background-color: #aa0000;
+    }
+
+    .ais-ClearRefinements-button--disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        background-color: #cccccc;
+    }
+
+    /* Add section spacing between filter groups */
+    .ais-Panel {
+        margin-bottom: 1.5rem;
+    }
+
+    .ais-Panel-header {
+        margin-bottom: 0.8rem;
+        font-weight: 600;
+        color: #555;
+    }
+
+    /* Searchbox inside the facet area */
+    .ais-SearchBox-form {
+        display: flex;
+        margin-bottom: 1rem;
+    }
+
+    .ais-SearchBox-input {
+        flex: 1;
+        padding: 10px 14px;
+        font-size: 0.9rem;
+        border: 1px solid #ddd;
+        border-radius: 6px 0 0 6px;
+        outline: none;
+    }
+
+    .ais-SearchBox-input:focus {
+        border-color: #722f37;
+        box-shadow: 0 0 0 2px rgba(114, 47, 55, 0.1);
+    }
+
+    .ais-SearchBox-submit {
+        border-radius: 0 6px 6px 0;
+    }
+
+    /* Add a subtle hover effect to refinement items */
+    .ais-RefinementList-item:hover,
+    .ais-Menu-item:hover {
+        background-color: rgba(0, 0, 0, 0.03);
+        border-radius: 4px;
+    }
+
+    /* Range Facet Styling (for papabile-rating and age-range) */
+    .ais-RangeSlider {
+        margin: 1.5rem 0.5rem;
+    }
+
+    /* Range Input styling */
+    .ais-RangeInput {
+        margin: 1rem 0;
+    }
+
+    .ais-RangeInput-form {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .ais-RangeInput-label {
+        display: none; /* Hide default labels */
+    }
+
+    .ais-RangeInput-input {
+        width: 70px;
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 0.9rem;
+    }
+
+    .ais-RangeInput-separator {
+        margin: 0 8px;
+        color: #666;
+    }
+
+    .ais-RangeInput-submit {
+        padding: 8px 16px;
+        background-color: #722f37;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        margin-left: 12px;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+    }
+
+    .ais-RangeInput-submit:hover {
+        background-color: #8c1a1a;
+    }
+
+    /* Rheostat Slider styling (used by RangeSlider) */
+    .rheostat {
+        margin: 24px 0;
+    }
+
+    .rheostat-horizontal {
+        height: 16px;
+    }
+
+    .rheostat-background {
+        background-color: #e0e0e0;
+        border: none;
+        border-radius: 8px;
+        height: 6px;
+        position: relative;
+        top: 5px;
+    }
+
+    .rheostat-progress {
+        background-color: #cc0000;
+        border-radius: 8px;
+        height: 6px;
+        position: absolute;
+        top: 5px;
+    }
+
+    .rheostat-handle {
+        background-color: #fff;
+        border: 1px solid #ccc;
+        border-radius: 50%;
+        height: 24px;
+        outline: none;
+        width: 24px;
+        z-index: 2;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        cursor: pointer;
+    }
+
+    .rheostat-handle:hover {
+        border-color: #722f37;
+        box-shadow: 0 0 0 3px rgba(114, 47, 55, 0.2);
+    }
+
+    .rheostat-handle:active {
+        border-color: #8c1a1a;
+    }
+
+    /* Value labels below the slider */
+    .ais-RangeSlider-tooltip,
+    .ais-RangeSlider-value {
+        font-size: 0.85rem;
+        color: #555;
+        margin-top: 8px;
+    }
+
+    /* Specific customization for different range facets */
+    .ais-Panel--papabileRating .rheostat-progress {
+        background-color: #8c1a1a; /* Darker red for papabile rating */
+    }
+
+    .ais-Panel--ageRange .rheostat-progress {
+        background-color: #722f37; /* Burgundy for age range */
+    }
+
+    /* Make sure range facets don't overlap */
+    .ais-Panel-body {
+        overflow: visible; /* Allow sliders to be properly displayed */
+        padding: 0.5rem 0;
+    }
+
+    /* Clear labels to indicate range values */
+    .range-facet-label {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 4px;
+        font-size: 0.85rem;
+        color: #666;
+    }
+
+    .range-facet-label__min {
+        text-align: left;
+    }
+
+    .range-facet-label__max {
+        text-align: right;
+    }
+
+    /* Improved Range Slider Endpoints */
+    .rheostat-value {
+        position: absolute;
+        font-size: 0.85rem;
+        color: #555;
+        margin-top: 8px;
+    }
+
+    /* Remove the circles and style the min/max values */
+    .rheostat-min,
+    .rheostat-max {
+        position: relative;
+        display: inline-block;
+        font-size: 0.85rem;
+        color: #333;
+        font-weight: 500;
+        background: transparent;
+        border: none;
+        box-shadow: none;
+        margin-top: 15px;
+    }
+
+    /* For InstantSearch range components */
+    .ais-RangeSlider-marker {
+        position: absolute;
+        background: transparent;
+        margin-top: 15px;
+        font-size: 0.85rem;
+        color: #555;
+        white-space: nowrap;
+    }
+
+    /* Better positioning of the markers */
+    .ais-RangeSlider-marker--first {
+        left: 0;
+        transform: translateX(-50%);
+    }
+
+    .ais-RangeSlider-marker--last {
+        right: 0;
+        transform: translateX(50%);
+    }
+
+    /* Customized tooltip for the current values */
+    .rheostat-tooltip {
+        position: absolute;
+        top: -30px;
+        background-color: #722f37;
+        color: white;
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        white-space: nowrap;
+        transform: translateX(-50%);
+        z-index: 3;
+    }
+
+    /* Arrow below tooltip */
+    .rheostat-tooltip:after {
+        content: "";
+        position: absolute;
+        bottom: -5px;
+        left: 50%;
+        transform: translateX(-50%);
+        border-width: 5px 5px 0;
+        border-style: solid;
+        border-color: #722f37 transparent transparent;
+    }
+
+    /* Custom styling for the Algolia InstantSearch specific components */
+    .ais-RangeSlider-value {
+        background: transparent;
+        padding: 0;
+        color: #555;
+        font-size: 0.85rem;
+        margin-top: 15px;
+    }
+
+    /* Replace the circular endpoints with simple text */
+    .ais-RangeSlider-handle {
+        border-radius: 50%;
+        background-color: white;
+        border: 1px solid #ccc;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+        height: 20px;
+        width: 20px;
+        z-index: 2;
+    }
+
+    /* Remove any rogue whitespace or background from the endpoints */
+    .ais-RangeSlider-handle:before,
+    .ais-RangeSlider-handle:after {
+        display: none;
+    }
+
+    /* Ensure labels don't overlap with slider */
+    .ais-RangeSlider-container {
+        margin: 30px 10px 35px;
     }
 
     /* Make InstantSearch work better on mobile */

@@ -11,6 +11,17 @@ import {
   clearRefinements,
 } from "instantsearch.js/es/widgets";
 
+// Define helper function at file scope, outside the component
+function getCardinalTypeColor(cardinalType) {
+  const colors = {
+    "Cardinal Bishop": "#8c1a1a",
+    "Cardinal Priest": "#cc0000",
+    "Cardinal Deacon": "#e55050",
+    default: "#cc0000",
+  };
+  return colors[cardinalType] || colors.default;
+}
+
 export default function CardinalSearch() {
   useEffect(() => {
     // Initialize the TypeSense client for client-side search
@@ -63,38 +74,43 @@ export default function CardinalSearch() {
         container: "#hits",
         templates: {
           item: (hit, { html, components }) => html`
-            <article class="cardinal-hit">
-              <div class="hit-content">
-                <div class="hit-image">
+            <article class="cardinal-card">
+              <div
+                class="card-header"
+                style="background-color: ${getCardinalTypeColor(
+                  hit.cardinalType,
+                )}"
+              >
+                <h3 class="cardinal-name">
+                  ${components.Highlight({ hit, attribute: "name" })}
+                </h3>
+                <p class="cardinal-title">${hit.title || ""}</p>
+              </div>
+              <div class="card-content">
+                <div class="card-image">
                   <img
                     src="${hit.imageUrl || "/images/cardinals/placeholder.jpg"}"
                     alt="${hit.name}"
                   />
                 </div>
-                <div class="hit-info">
-                  <h3>
-                    <a href="/cardinals/${hit.id || hit.baserow_id}">
-                      ${components.Highlight({ hit, attribute: "name" })}
-                    </a>
-                  </h3>
-                  <p class="hit-title">${hit.title || ""}</p>
-                  <p class="hit-details">
-                    <span>${hit.age} years old</span> ·
-                    <span>${hit.country}</span> ·
-                    <span>Appointed in ${hit.yearAppointed}</span>
-                  </p>
-                  <div class="hit-papabile">
-                    <span class="papabile-label">Papabile rating:</span>
+                <div class="cardinal-details">
+                  <p><strong>Age:</strong> ${hit.age} years</p>
+                  <p><strong>Country:</strong> ${hit.country}</p>
+                  <p><strong>Appointed:</strong> ${hit.yearAppointed}</p>
+                  <p>
+                    <strong>Papabile Rating:</strong>
                     <span class="papabile-value"
                       >${hit.papabileRating || 5}/10</span
                     >
-                  </div>
-                  <a
-                    href="/cardinals/${hit.id || hit.baserow_id}"
-                    class="hit-button"
-                    >View Profile</a
-                  >
+                  </p>
                 </div>
+              </div>
+              <div class="card-footer">
+                <a
+                  href="/cardinals/${hit.id || hit.baserow_id}"
+                  class="view-button"
+                  >View Profile</a
+                >
               </div>
             </article>
           `,
