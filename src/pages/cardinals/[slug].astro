@@ -1,100 +1,153 @@
 ---
-import { getCollection } from "astro:content";
 import Layout from "../../layouts/Layout.astro";
+import { getCardinalById } from "../../lib/cardinalService";
 
-// Generate routes for all cardinals
-export async function getStaticPaths() {
-    const cardinals = await getCollection("cardinals");
-    return cardinals.map((entry) => ({
-        params: { slug: entry.slug },
-        props: { entry },
-    }));
+// Set this route to be server-rendered (not prerendered at build time)
+export const prerender = false;
+
+// Get the slug parameter from the URL
+const { slug } = Astro.params;
+
+// Fetch the cardinal data from Typesense
+const cardinal = await getCardinalById(slug);
+
+// Redirect to 404 if cardinal not found
+if (!cardinal) {
+    return Astro.redirect("/404");
 }
 
-const { entry } = Astro.props;
-const { Content } = await entry.render();
+// Helper function to get theology color
+function getTheologyColor(lean) {
+    const colors = {
+        Progressive: "#4a90e2",
+        "Moderate Progressive": "#77b3f0",
+        Moderate: "#9370db",
+        "Moderate Conservative": "#f0a477",
+        Conservative: "#e27b4a",
+        Traditional: "#cc0000",
+        // Default
+        default: "#9370db",
+    };
+
+    return colors[lean] || colors["default"];
+}
+
+// Default values for missing data
+const theologicalLean = cardinal.theologicalLean || "Moderate";
 ---
 
-<Layout title={`Cardinal ${entry.data.name} | Conclave Tracker`}>
-    <main>
-        <div class="cardinal-header">
-            <div class="cardinal-image">
+<Layout title={`Cardinal ${cardinal.name}`}>
+    <main class="cardinal-profile">
+        <div class="profile-header">
+            <div class="profile-image">
                 <img
-                    src={entry.data.image}
-                    alt={`Cardinal ${entry.data.name}`}
+                    src={cardinal.imageUrl ||
+                        "/images/cardinals/placeholder.jpg"}
+                    alt={`Cardinal ${cardinal.name}`}
                 />
             </div>
-            <div class="cardinal-title">
-                <h1>{entry.data.name}</h1>
-                <p class="title">{entry.data.title}</p>
-                {
-                    entry.data.is_papabile && (
-                        <div class="papabile-badge">Papabile</div>
-                    )
-                }
+
+            <div class="profile-intro">
+                <h1>{cardinal.name}</h1>
+                <p class="title">{cardinal.title}</p>
+                <p class="office">{cardinal.office}</p>
+
+                <div class="key-stats">
+                    <div class="stat">
+                        <span class="label">Age</span>
+                        <span class="value">{cardinal.age}</span>
+                    </div>
+                    <div class="stat">
+                        <span class="label">Country</span>
+                        <span class="value">{cardinal.country}</span>
+                    </div>
+                    <div class="stat">
+                        <span class="label">Cardinal Since</span>
+                        <span class="value">{cardinal.yearAppointed}</span>
+                    </div>
+                    <div class="stat">
+                        <span class="label">Appointed By</span>
+                        <span class="value">{cardinal.appointedBy}</span>
+                    </div>
+                    <div class="stat papabile">
+                        <span class="label">Papabile Rating</span>
+                        <span class="value"
+                            >{cardinal.papabileRating || 5}/10</span
+                        >
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="cardinal-details">
-            <div class="stats-card">
-                <h2>Cardinal Details</h2>
-                <div class="stat-row">
-                    <div class="stat-label">Country:</div>
-                    <div class="stat-value">{entry.data.country}</div>
-                </div>
-                <div class="stat-row">
-                    <div class="stat-label">Age:</div>
-                    <div class="stat-value">{entry.data.age}</div>
-                </div>
-                <div class="stat-row">
-                    <div class="stat-label">Created Cardinal:</div>
-                    <div class="stat-value">{entry.data.created_cardinal}</div>
-                </div>
-                {
-                    entry.data.papal_probability && (
-                        <div class="stat-row">
-                            <div class="stat-label">Papal Probability:</div>
-                            <div class="stat-value">
-                                {(entry.data.papal_probability * 100).toFixed(
-                                    1,
-                                )}
-                                %
-                            </div>
-                        </div>
-                    )
-                }
-                {
-                    entry.data.voting_history && (
-                        <div class="stat-block">
-                            <h3>Voting History</h3>
-                            <ul>
-                                {entry.data.voting_history.map((item) => (
-                                    <li>{item}</li>
-                                ))}
-                            </ul>
-                        </div>
-                    )
-                }
-            </div>
-
-            <div class="bio-content">
+        <div class="profile-content">
+            <section class="bio-section">
                 <h2>Biography</h2>
-                <div class="content">
-                    <Content />
-                </div>
+                <p>{cardinal.shortBio}</p>
 
-                <div class="ai-analysis">
-                    <h2>AI Analysis</h2>
-                    <p>
-                        Our AI system predicts this cardinal has a
-                        {(entry.data.papal_probability * 100).toFixed(1)}%
-                        chance of becoming the next Pope based on historical
-                        patterns and current Church dynamics.
+                {
+                    cardinal.wikipedia_url && (
+                        <p class="wiki-link">
+                            <a
+                                href={cardinal.wikipedia_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                Read more on Wikipedia
+                            </a>
+                        </p>
+                    )
+                }
+            </section>
+
+            <div class="sidebar">
+                <section class="issues-section">
+                    <h2>Key Issues & Focus Areas</h2>
+                    <div class="issues-tags">
+                        {
+                            cardinal.primaryIssues &&
+                                cardinal.primaryIssues.length > 0 &&
+                                cardinal.primaryIssues.map((issue) => (
+                                    <span class="issue-tag">{issue}</span>
+                                ))
+                        }
+                        {
+                            (!cardinal.primaryIssues ||
+                                cardinal.primaryIssues.length === 0) && (
+                                <p class="no-data">No specific issues listed</p>
+                            )
+                        }
+                    </div>
+                </section>
+
+                <section class="theology-section">
+                    <h2>Theological Perspective</h2>
+                    <p class="theology-lean">
+                        <span
+                            class="lean-indicator"
+                            style={`background-color: ${getTheologyColor(theologicalLean)}`}
+                        ></span>
+                        {theologicalLean}
                     </p>
+                </section>
 
-                    <!-- This is where you would add your AI interaction components -->
-                    <button class="ai-button">Generate More Analysis</button>
-                </div>
+                <section class="languages-section">
+                    <h2>Languages</h2>
+                    <div class="language-tags">
+                        {
+                            cardinal.languages &&
+                                cardinal.languages.length > 0 &&
+                                cardinal.languages.map((language) => (
+                                    <span class="language-tag">{language}</span>
+                                ))
+                        }
+                        {
+                            (!cardinal.languages ||
+                                cardinal.languages.length === 0) && (
+                                <p class="no-data">No languages listed</p>
+                            )
+                        }
+                    </div>
+                </section>
             </div>
         </div>
 
@@ -105,150 +158,173 @@ const { Content } = await entry.render();
 </Layout>
 
 <style>
-    main {
-        max-width: 1000px;
+    .cardinal-profile {
+        max-width: 1200px;
         margin: 0 auto;
-        padding: 20px;
+        padding: 2rem;
     }
 
-    .cardinal-header {
-        display: flex;
-        margin-bottom: 30px;
-        align-items: center;
+    .profile-header {
+        display: grid;
+        grid-template-columns: 300px 1fr;
+        gap: 2rem;
+        margin-bottom: 2rem;
     }
 
-    .cardinal-image {
-        width: 200px;
-        height: 250px;
-        overflow: hidden;
-        border-radius: 10px;
-        margin-right: 30px;
-    }
-
-    .cardinal-image img {
+    .profile-image img {
         width: 100%;
-        height: 100%;
-        object-fit: cover;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
 
-    .cardinal-title h1 {
-        margin: 0 0 10px 0;
-        color: #722f37;
+    .profile-intro h1 {
+        margin: 0 0 0.5rem;
+        font-size: 2.5rem;
+        color: #8c1a1a;
     }
 
-    .title {
-        font-style: italic;
+    .title,
+    .office {
+        margin: 0.25rem 0;
         font-size: 1.2rem;
-        margin: 0 0 15px 0;
-        color: #555;
     }
 
-    .papabile-badge {
-        display: inline-block;
-        background: #722f37;
-        color: white;
-        padding: 5px 10px;
-        border-radius: 4px;
+    .key-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+
+    .stat {
+        background-color: #f9f9f9;
+        padding: 1rem;
+        border-radius: 8px;
+        text-align: center;
+    }
+
+    .stat .label {
+        display: block;
+        font-size: 0.9rem;
+        color: #666;
+        margin-bottom: 0.25rem;
+    }
+
+    .stat .value {
+        display: block;
+        font-size: 1.2rem;
+        font-weight: bold;
+    }
+
+    .papabile {
+        background-color: #fff7e6;
+    }
+
+    .profile-content {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 2rem;
+    }
+
+    .bio-section {
+        grid-column: 1 / 2;
+    }
+
+    .wiki-link {
+        margin-top: 1rem;
+    }
+
+    .wiki-link a {
+        color: #8c1a1a;
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .wiki-link a:hover {
+        text-decoration: underline;
+    }
+
+    .sidebar {
+        grid-column: 2 / 3;
+    }
+
+    .issues-section,
+    .theology-section,
+    .languages-section {
+        margin-bottom: 2rem;
+        background-color: #f9f9f9;
+        padding: 1.5rem;
+        border-radius: 8px;
+    }
+
+    .issues-tags,
+    .language-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .issue-tag,
+    .language-tag {
+        background-color: #f0f0f0;
+        padding: 0.5rem 1rem;
+        border-radius: 50px;
         font-size: 0.9rem;
     }
 
-    .cardinal-details {
-        display: grid;
-        grid-template-columns: 300px 1fr;
-        gap: 30px;
-        margin-bottom: 30px;
-    }
-
-    .stats-card {
-        background: #f8f8f8;
-        border-radius: 10px;
-        padding: 20px;
-    }
-
-    .stats-card h2 {
-        margin-top: 0;
-        color: #722f37;
-        font-size: 1.3rem;
-    }
-
-    .stat-row {
+    .theology-lean {
         display: flex;
-        margin-bottom: 10px;
-    }
-
-    .stat-label {
+        align-items: center;
+        gap: 0.5rem;
         font-weight: bold;
-        width: 140px;
-        color: #555;
     }
 
-    .stat-block {
-        margin-top: 20px;
-    }
-
-    .stat-block h3 {
-        font-size: 1.1rem;
-        color: #555;
-        margin-bottom: 10px;
-    }
-
-    .bio-content h2 {
-        color: #722f37;
-        margin-top: 0;
-    }
-
-    .content {
-        line-height: 1.6;
-    }
-
-    .ai-analysis {
-        margin-top: 40px;
-        padding: 20px;
-        background: #f0f0f0;
-        border-radius: 10px;
-        border-left: 4px solid #722f37;
-    }
-
-    .ai-button {
-        background: #722f37;
-        color: white;
-        border: none;
-        padding: 10px 15px;
-        border-radius: 5px;
-        cursor: pointer;
-        margin-top: 15px;
-        transition: background-color 0.2s;
-    }
-
-    .ai-button:hover {
-        background: #5a252b;
+    .lean-indicator {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
     }
 
     .back-link {
-        margin-top: 40px;
+        margin-top: 3rem;
     }
 
     .back-link a {
-        color: #722f37;
+        color: #8c1a1a;
         text-decoration: none;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
     }
 
     .back-link a:hover {
         text-decoration: underline;
     }
 
+    .no-data {
+        color: #888;
+        font-style: italic;
+    }
+
     @media (max-width: 768px) {
-        .cardinal-header {
-            flex-direction: column;
+        .profile-header {
+            grid-template-columns: 1fr;
+        }
+
+        .profile-image {
             text-align: center;
         }
 
-        .cardinal-image {
-            margin: 0 auto 20px auto;
+        .profile-image img {
+            max-width: 250px;
         }
 
-        .cardinal-details {
+        .profile-content {
             grid-template-columns: 1fr;
+        }
+
+        .sidebar {
+            grid-column: 1 / 2;
         }
     }
 </style>

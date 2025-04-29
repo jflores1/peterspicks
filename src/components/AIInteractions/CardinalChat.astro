@@ -1,0 +1,202 @@
+---
+// src/components/AIInteractions/CardinalChat.astro
+const { cardinalId, cardinalName } = Astro.props;
+---
+
+<div class="cardinal-chat">
+    <h2>Ask Cardinal {cardinalName}</h2>
+
+    <div class="chat-container">
+        <div class="chat-messages" id="chat-messages">
+            <div class="message system">
+                Ask me a question about my views, experiences, or the Church.
+            </div>
+        </div>
+
+        <div class="chat-input">
+            <form id="chat-form">
+                <input
+                    type="text"
+                    id="user-message"
+                    placeholder="Type your question..."
+                    autocomplete="off"
+                />
+                <button type="submit">Send</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .cardinal-chat {
+        margin-top: 2rem;
+        border: 1px solid #eee;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .cardinal-chat h2 {
+        background-color: #f5f5f5;
+        margin: 0;
+        padding: 1rem;
+        font-size: 1.2rem;
+        border-bottom: 1px solid #eee;
+    }
+
+    .chat-container {
+        display: flex;
+        flex-direction: column;
+        height: 400px;
+    }
+
+    .chat-messages {
+        flex-grow: 1;
+        padding: 1rem;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .message {
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        max-width: 80%;
+    }
+
+    .message.system {
+        background-color: #f0f0f0;
+        align-self: center;
+    }
+
+    .message.user {
+        background-color: #e1f5fe;
+        align-self: flex-end;
+    }
+
+    .message.assistant {
+        background-color: #f9f9f9;
+        align-self: flex-start;
+        border-left: 3px solid #8c1a1a;
+    }
+
+    .chat-input {
+        padding: 1rem;
+        border-top: 1px solid #eee;
+    }
+
+    .chat-input form {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .chat-input input {
+        flex-grow: 1;
+        padding: 0.75rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 1rem;
+    }
+
+    .chat-input button {
+        padding: 0.75rem 1.5rem;
+        background-color: #8c1a1a;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .chat-input button:disabled {
+        background-color: #cccccc;
+        cursor: not-allowed;
+    }
+</style>
+<script define:vars={{ cardinalId }}>
+    document.addEventListener("DOMContentLoaded", () => {
+        const chatForm = document.getElementById("chat-form");
+        const userMessageInput = document.getElementById("user-message");
+        const chatMessages = document.getElementById("chat-messages");
+
+        // Helper function to add messages to the chat
+        function addMessage(text, type) {
+            const messageDiv = document.createElement("div");
+            messageDiv.classList.add("message", type);
+            messageDiv.textContent = text;
+
+            // Generate a unique ID for the message
+            const messageId =
+                "msg-" +
+                Date.now() +
+                "-" +
+                Math.random().toString(36).substr(2, 5);
+            messageDiv.id = messageId;
+
+            chatMessages.appendChild(messageDiv);
+
+            // Scroll to the bottom
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            return messageId;
+        }
+
+        chatForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const message = userMessageInput.value.trim();
+            if (!message) return;
+
+            // Clear input
+            userMessageInput.value = "";
+
+            // Add user message to chat
+            addMessage(message, "user");
+
+            // Show loading indicator
+            const loadingId = addMessage("Thinking...", "assistant loading");
+
+            try {
+                // Call API
+                const response = await fetch("/api/cardinal-ai", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        cardinalId,
+                        message,
+                    }),
+                });
+
+                if (!response.ok) {
+                    throw new Error("API request failed");
+                }
+
+                const data = await response.json();
+
+                // Remove loading message
+                const loadingMessage = document.getElementById(loadingId);
+                if (loadingMessage) {
+                    loadingMessage.remove();
+                }
+
+                // Add the response to the chat
+                addMessage(data.message, "assistant");
+            } catch (error) {
+                console.error("Error:", error);
+
+                // Remove loading message
+                const loadingMessage = document.getElementById(loadingId);
+                if (loadingMessage) {
+                    loadingMessage.remove();
+                }
+
+                // Show error message
+                addMessage(
+                    "Sorry, there was an error processing your request.",
+                    "assistant error",
+                );
+            }
+        });
+    });
+</script>

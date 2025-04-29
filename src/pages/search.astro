@@ -1,0 +1,249 @@
+---
+// src/pages/search.astro
+import Layout from "../layouts/Layout.astro";
+import CardinalCard from "../components/CardinalCard/CardinalCard.astro";
+import { searchCardinals, getFacets } from "../lib/cardinalService";
+
+// Default to empty search to show all results if no query
+const query = Astro.url.searchParams.get("q") || "";
+
+// Get any applied filters from URL
+const filters = {};
+const possibleFilters = [
+    "country",
+    "region",
+    "cardinalType",
+    "appointedBy",
+    "theologicalLean",
+    "primaryIssues",
+];
+
+for (const filter of possibleFilters) {
+    const value = Astro.url.searchParams.get(filter);
+    if (value) {
+        filters[filter] = value;
+    }
+}
+
+// Get results and facets
+const [cardinals, facets] = await Promise.all([
+    searchCardinals(query, filters),
+    getFacets(),
+]);
+---
+
+<Layout title="Search Cardinals">
+    <main class="search-page">
+        <h1>Search Cardinals</h1>
+
+        <div class="search-container">
+            <form class="search-form" action="/search" method="get">
+                <input
+                    type="search"
+                    name="q"
+                    placeholder="Search for cardinals..."
+                    value={query}
+                />
+                <button type="submit">Search</button>
+            </form>
+        </div>
+
+        <div class="search-layout">
+            <aside class="facets-sidebar">
+                <h2>Filter Results</h2>
+
+                {
+                    facets &&
+                        facets.map((facet) => (
+                            <div class="facet-group">
+                                <h3>{formatFacetName(facet.field_name)}</h3>
+                                <ul class="facet-list">
+                                    {facet.counts.map((option) => (
+                                        <li>
+                                            <a
+                                                href={buildFilterUrl(
+                                                    facet.field_name,
+                                                    option.value,
+                                                )}
+                                                class={
+                                                    isFilterActive(
+                                                        facet.field_name,
+                                                        option.value,
+                                                    )
+                                                        ? "active"
+                                                        : ""
+                                                }
+                                            >
+                                                {option.value} ({option.count})
+                                            </a>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        ))
+                }
+
+                {
+                    Object.keys(filters).length > 0 && (
+                        <div class="clear-filters">
+                            <a href="/search">Clear All Filters</a>
+                        </div>
+                    )
+                }
+            </aside>
+
+            <div class="search-results">
+                <p class="results-count">{cardinals.length} cardinals found</p>
+
+                <div class="cardinals-grid">
+                    {
+                        cardinals.map((cardinal) => (
+                            <CardinalCard cardinal={cardinal} />
+                        ))
+                    }
+                </div>
+            </div>
+        </div>
+    </main>
+</Layout>
+
+<style>
+    .search-page {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 1rem;
+    }
+
+    .search-container {
+        margin-bottom: 2rem;
+    }
+
+    .search-form {
+        display: flex;
+        max-width: 600px;
+    }
+
+    .search-form input {
+        flex-grow: 1;
+        padding: 0.75rem;
+        border: 1px solid #ddd;
+        border-radius: 4px 0 0 4px;
+        font-size: 1rem;
+    }
+
+    .search-form button {
+        padding: 0.75rem 1.5rem;
+        background-color: #8c1a1a;
+        color: white;
+        border: none;
+        border-radius: 0 4px 4px 0;
+        cursor: pointer;
+    }
+
+    .search-layout {
+        display: grid;
+        grid-template-columns: 250px 1fr;
+        gap: 2rem;
+    }
+
+    .facets-sidebar {
+        background-color: #f9f9f9;
+        padding: 1rem;
+        border-radius: 8px;
+    }
+
+    .facet-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .facet-group h3 {
+        margin-bottom: 0.5rem;
+        font-size: 1.1rem;
+        color: #333;
+    }
+
+    .facet-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .facet-list li {
+        margin-bottom: 0.25rem;
+    }
+
+    .facet-list a {
+        display: block;
+        padding: 0.25rem 0;
+        color: #666;
+        text-decoration: none;
+        font-size: 0.9rem;
+    }
+
+    .facet-list a:hover {
+        color: #8c1a1a;
+    }
+
+    .facet-list a.active {
+        color: #8c1a1a;
+        font-weight: bold;
+    }
+
+    .clear-filters {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid #eee;
+    }
+
+    .clear-filters a {
+        color: #8c1a1a;
+        text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: bold;
+    }
+
+    .results-count {
+        margin-bottom: 1rem;
+        color: #666;
+    }
+
+    .cardinals-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1.5rem;
+    }
+
+    @media (max-width: 768px) {
+        .search-layout {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<script define:vars={{ possibleFilters, filters, query }}>
+    // Helper functions for facet display and URLs
+    function formatFacetName(fieldName) {
+        return fieldName
+            .replace(/([A-Z])/g, " $1")
+            .replace(/^./, (str) => str.toUpperCase());
+    }
+
+    function buildFilterUrl(fieldName, value) {
+        // Create a new URLSearchParams based on current URL
+        const params = new URLSearchParams(window.location.search);
+
+        // Add or replace the filter
+        params.set(fieldName, value);
+
+        // Keep the search query if there is one
+        if (query) {
+            params.set("q", query);
+        }
+
+        return `/search?${params.toString()}`;
+    }
+
+    function isFilterActive(fieldName, value) {
+        return filters[fieldName] === value;
+    }
+</script>

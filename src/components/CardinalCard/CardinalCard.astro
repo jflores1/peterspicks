@@ -5,179 +5,156 @@ export interface Props {
 
 const { cardinal } = Astro.props;
 
-// Convert papal probability to stars (1-5)
-const getStarRating = (probability) => {
-    if (!probability) return 0;
-    // Scale from 0-1 to 1-5 stars
-    return Math.max(1, Math.min(5, Math.round(probability * 5)));
-};
-
-const starRating = getStarRating(cardinal.data.papal_probability);
+// Default papabile rating handling
+const papabileRating = cardinal.papabileRating || 5;
 ---
 
 <div class="cardinal-card">
-    <div class="cardinal-image">
-        <img src={cardinal.data.image} alt={`Cardinal ${cardinal.data.name}`} />
+    <div
+        class="card-header"
+        style={`background-color: ${getCardinalTypeColor(cardinal.cardinalType)}`}
+    >
+        <h3 class="cardinal-name">{cardinal.name}</h3>
+        <p class="cardinal-title">{cardinal.title}</p>
     </div>
-    <div class="cardinal-info">
-        <h2>{cardinal.data.name}</h2>
-        <p class="title">{cardinal.data.title}</p>
-        <div class="stats">
-            <div class="stat">
-                <span class="label">Country:</span>
-                <span class="value">{cardinal.data.country}</span>
-            </div>
-            <div class="stat">
-                <span class="label">Age:</span>
-                <span class="value">{cardinal.data.age}</span>
-            </div>
-            <div class="stat">
-                <span class="label">Cardinal since:</span>
-                <span class="value">{cardinal.data.created_cardinal}</span>
-            </div>
+
+    <div class="card-content">
+        <div class="image-container">
+            <img
+                src={cardinal.imageUrl || "/images/cardinals/placeholder.jpg"}
+                alt={`Cardinal ${cardinal.name}`}
+                loading="lazy"
+            />
         </div>
 
-        {
-            cardinal.data.is_papabile && (
-                <div class="papabile-section">
-                    <div class="papabile-badge">Papabile</div>
-                    <div
-                        class="star-rating"
-                        title={`${(cardinal.data.papal_probability * 100).toFixed(1)}% likelihood`}
-                    >
-                        {Array(5)
-                            .fill(0)
-                            .map((_, i) => (
-                                <span
-                                    class={`star ${i < starRating ? "filled" : "empty"}`}
-                                >
-                                    ★
-                                </span>
-                            ))}
-                    </div>
-                </div>
-            )
-        }
+        <div class="cardinal-details">
+            <p><strong>Age:</strong> {cardinal.age}</p>
+            <p><strong>Country:</strong> {cardinal.country}</p>
+            <p><strong>Region:</strong> {cardinal.region}</p>
+            <p>
+                <strong>Appointed:</strong>
+                {cardinal.yearAppointed} by {cardinal.appointedBy}
+            </p>
+            <p>
+                <strong>Papabile Rating:</strong>
+                <span class="papabile-stars">{papabileRating}/10</span>
+            </p>
 
-        <div class="tags">
             {
-                cardinal.data.tags &&
-                    cardinal.data.tags.map((tag) => (
-                        <span class="tag">{tag}</span>
-                    ))
+                cardinal.primaryIssues && cardinal.primaryIssues.length > 0 && (
+                    <div class="tags">
+                        {cardinal.primaryIssues.map((issue) => (
+                            <span class="tag">{issue}</span>
+                        ))}
+                    </div>
+                )
             }
         </div>
-        <div class="bio-preview">
-            <p>{cardinal.body.substring(0, 150)}...</p>
-            <a href={`/cardinals/${cardinal.slug}`}>Read more</a>
-        </div>
+    </div>
+
+    <div class="card-footer">
+        <a
+            href={`/cardinals/${cardinal.id || cardinal.baserow_id}`}
+            class="view-button">View Profile</a
+        >
     </div>
 </div>
 
 <style>
     .cardinal-card {
-        display: flex;
-        border-radius: 12px;
+        border-radius: 8px;
         overflow: hidden;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        margin-bottom: 20px;
-        background: white;
-        transition: transform 0.2s;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease;
+        background-color: white;
     }
 
     .cardinal-card:hover {
-        transform: translateY(-4px);
+        transform: translateY(-5px);
     }
 
-    .cardinal-image {
-        width: 150px;
-        height: 200px;
-        overflow: hidden;
-    }
-
-    .cardinal-image img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-
-    .cardinal-info {
-        padding: 16px;
-        flex: 1;
-    }
-
-    h2 {
-        margin: 0 0 4px 0;
-        color: #722f37; /* Cardinal red */
-    }
-
-    .title {
-        font-style: italic;
-        margin: 0 0 10px 0;
-        color: #555;
-    }
-
-    .stats {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 8px;
-        margin-bottom: 12px;
-    }
-
-    .label {
-        font-weight: bold;
-        color: #555;
-    }
-
-    .papabile-section {
-        display: flex;
-        align-items: center;
-        margin-bottom: 12px;
-    }
-
-    .papabile-badge {
-        display: inline-block;
-        background: #722f37;
+    .card-header {
         color: white;
-        padding: 3px 8px;
-        border-radius: 4px;
-        font-size: 0.8rem;
-        margin-right: 8px;
+        padding: 1rem;
+        text-align: center;
     }
 
-    .star-rating {
-        display: inline-flex;
+    .cardinal-name {
+        margin: 0;
+        font-size: 1.4rem;
     }
 
-    .star {
-        font-size: 1.2rem;
-        padding: 0 2px;
+    .cardinal-title {
+        margin: 0.5rem 0 0;
+        font-size: 1rem;
+        opacity: 0.9;
     }
 
-    .star.filled {
-        color: #ffd700; /* Gold color for filled stars */
+    .card-content {
+        padding: 1rem;
+        display: grid;
+        grid-template-columns: 120px 1fr;
+        gap: 1rem;
     }
 
-    .star.empty {
-        color: #ccc; /* Light gray for empty stars */
+    .image-container img {
+        width: 100%;
+        aspect-ratio: 1/1;
+        object-fit: cover;
+        border-radius: 50%;
+    }
+
+    .cardinal-details p {
+        margin: 0.5rem 0;
+        font-size: 0.9rem;
+    }
+
+    .papabile-stars {
+        font-weight: bold;
+        color: #cc0000;
     }
 
     .tags {
         display: flex;
         flex-wrap: wrap;
-        gap: 6px;
-        margin-bottom: 12px;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
     }
 
     .tag {
-        background: #f0f0f0;
-        padding: 2px 8px;
+        background-color: #f0f0f0;
+        padding: 0.2rem 0.5rem;
         border-radius: 4px;
         font-size: 0.8rem;
     }
 
-    .bio-preview {
-        font-size: 0.9rem;
-        color: #444;
+    .card-footer {
+        padding: 1rem;
+        text-align: center;
+        border-top: 1px solid #eee;
+    }
+
+    .view-button {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        background-color: #cc0000;
+        color: white;
+        text-decoration: none;
+        border-radius: 4px;
+        font-weight: bold;
     }
 </style>
+
+<script>
+    function getCardinalTypeColor(cardinalType) {
+        const colors = {
+            "Cardinal Bishop": "#8c1a1a",
+            "Cardinal Priest": "#cc0000",
+            "Cardinal Deacon": "#e55050",
+            // Default color if type is unknown
+            default: "#cc0000",
+        };
+
+        return colors[cardinalType] || colors["default"];
+    }
+</script>

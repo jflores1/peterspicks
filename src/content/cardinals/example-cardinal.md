@@ -3,8 +3,9 @@ name: "Cardinal Name"
 title: "Cardinal of City"
 country: "Country"
 birthDate: "YYYY-MM-DD"
-createdCardinal: "YYYY-MM-DD"
-thumbnail: "/images/cardinals/cardinal-name.jpg"
+created_cardinal: "YYYY-MM-DD"  # Changed from createdCardinal
+image: "/images/cardinals/cardinal-name.jpg"  # Changed from thumbnail
+age: 65  # Added required age field
 stats:
   languages: ["English", "Italian", "Spanish"]
   papabileRating: 7

@@ -1,60 +1,52 @@
 ---
-import { getCollection } from "astro:content";
 import Layout from "../layouts/Layout.astro";
-import CardinalCard from "../components/CardinalCard/CardinalCard.astro";
+import { getAllCardinals } from "../lib/cardinalService";
+import CardinalSearch from "../components/CardinalSearch";
 
-const cardinals = await getCollection("cardinals");
-const sortedCardinals = cardinals.sort((a, b) => {
-    // Sort by papabile first, then by probability
-    if (a.data.is_papabile && !b.data.is_papabile) return -1;
-    if (!a.data.is_papabile && b.data.is_papabile) return 1;
-    return (b.data.papal_probability || 0) - (a.data.papal_probability || 0);
-});
+// Server-side data fetching for stats
+const cardinals = await getAllCardinals();
+
+// Get some stats for the banner
+const totalCardinals = cardinals.length;
+const regions = [...new Set(cardinals.map((c) => c.region).filter(Boolean))];
+const countries = [...new Set(cardinals.map((c) => c.country).filter(Boolean))];
+const avgAge = Math.round(
+    cardinals.reduce((sum, c) => sum + (c.age || 0), 0) / totalCardinals,
+);
 ---
 
-<Layout title="Conclave Tracker">
+<Layout title="2024 Vatican Conclave Cardinals">
     <main>
-        <h1>2024 Papal Conclave Tracker</h1>
-        <p class="subtitle">
-            Tracking the Cardinals who will elect the next Pope
-        </p>
+        <div class="header-section">
+            <h1>2024 Vatican Conclave Cardinals</h1>
+            <p class="subtitle">
+                Browse, search and explore the Cardinals who will elect the next
+                Pope
+            </p>
+        </div>
 
+        <!-- Stats Banner -->
         <div class="stats-banner">
             <div class="stat">
-                <span class="value">{cardinals.length}</span>
+                <span class="value">{totalCardinals}</span>
                 <span class="label">Cardinals</span>
             </div>
             <div class="stat">
-                <span class="value"
-                    >{cardinals.filter((c) => c.data.is_papabile).length}</span
-                >
-                <span class="label">Papabili</span>
+                <span class="value">{regions.length}</span>
+                <span class="label">Regions</span>
             </div>
             <div class="stat">
-                <span class="value"
-                    >{
-                        Math.floor(
-                            cardinals.reduce((sum, c) => sum + c.data.age, 0) /
-                                cardinals.length,
-                        )
-                    }</span
-                >
+                <span class="value">{countries.length}</span>
+                <span class="label">Countries</span>
+            </div>
+            <div class="stat">
+                <span class="value">{avgAge}</span>
                 <span class="label">Avg. Age</span>
             </div>
         </div>
 
-        <section class="filter-section">
-            <h2>Cardinals Explorer</h2>
-            <!-- We'll add filters later -->
-        </section>
-
-        <section class="cardinals-grid">
-            {
-                sortedCardinals.map((cardinal) => (
-                    <CardinalCard cardinal={cardinal} />
-                ))
-            }
-        </section>
+        <!-- Search Interface -->
+        <CardinalSearch client:load />
     </main>
 </Layout>
 
@@ -65,14 +57,17 @@ const sortedCardinals = cardinals.sort((a, b) => {
         padding: 20px;
     }
 
+    .header-section {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
     h1 {
         color: #722f37;
-        text-align: center;
         margin-bottom: 8px;
     }
 
     .subtitle {
-        text-align: center;
         color: #555;
         margin-top: 0;
         margin-bottom: 30px;
@@ -104,19 +99,236 @@ const sortedCardinals = cardinals.sort((a, b) => {
         color: #555;
     }
 
-    .filter-section {
-        margin-bottom: 30px;
+    @media (max-width: 768px) {
+        .stats-banner {
+            flex-wrap: wrap;
+        }
+
+        .stats-banner .stat {
+            width: 50%;
+            margin-bottom: 1rem;
+        }
+    }
+</style>
+
+<style is:global>
+    /* Cardinal hit styling and all the global styles from before... */
+    .search-container {
+        margin-top: 2rem;
     }
 
-    .cardinals-grid {
+    .search-panel {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(600px, 1fr));
-        gap: 20px;
+        grid-template-columns: 1fr 3fr;
+        gap: 2rem;
+    }
+
+    .search-panel__filters {
+        padding: 1rem;
+        background-color: #f8f8f8;
+        border-radius: 8px;
+    }
+
+    .search-panel__filters h2 {
+        margin-top: 0;
+        font-size: 1.2rem;
+        color: #722f37;
+    }
+
+    .search-panel__results {
+        width: 100%;
+    }
+
+    .searchbox {
+        margin-bottom: 1rem;
     }
 
     @media (max-width: 768px) {
-        .cardinals-grid {
+        .search-panel {
             grid-template-columns: 1fr;
+        }
+    }
+
+    /* Cardinal hit styling */
+    .cardinal-hit {
+        display: block;
+        padding: 0;
+        margin: 0;
+    }
+
+    .hit-content {
+        display: grid;
+        grid-template-columns: 120px 1fr;
+        padding: 1rem;
+        gap: 1rem;
+    }
+
+    .hit-image {
+        width: 100%;
+    }
+
+    .hit-image img {
+        width: 100%;
+        aspect-ratio: 1/1;
+        object-fit: cover;
+        border-radius: 50%;
+    }
+
+    .hit-info {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .hit-info h3 {
+        margin: 0 0 0.5rem;
+        font-size: 1.2rem;
+    }
+
+    .hit-info h3 a {
+        color: #8c1a1a;
+        text-decoration: none;
+    }
+
+    .hit-info h3 a:hover {
+        text-decoration: underline;
+    }
+
+    .hit-title {
+        margin: 0 0 0.5rem;
+        font-style: italic;
+        color: #666;
+    }
+
+    .hit-details {
+        margin: 0 0 0.5rem;
+        font-size: 0.9rem;
+        color: #444;
+    }
+
+    .hit-papabile {
+        margin: 0.5rem 0;
+        display: flex;
+        align-items: center;
+    }
+
+    .papabile-label {
+        font-weight: bold;
+        margin-right: 0.5rem;
+    }
+
+    .papabile-value {
+        background-color: #fff7e6;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-weight: bold;
+    }
+
+    .hit-button {
+        margin-top: auto;
+        display: inline-block;
+        align-self: flex-start;
+        padding: 0.5rem 1rem;
+        background-color: #cc0000;
+        color: white;
+        text-decoration: none;
+        border-radius: 4px;
+        font-weight: bold;
+        margin-top: 0.5rem;
+    }
+
+    .hit-button:hover {
+        background-color: #aa0000;
+    }
+
+    .no-results {
+        text-align: center;
+        padding: 2rem;
+        background-color: #f8f8f8;
+        border-radius: 8px;
+    }
+
+    /* InstantSearch overrides */
+    .ais-SearchBox-form {
+        display: flex;
+        align-items: center;
+    }
+
+    .ais-SearchBox-input {
+        flex-grow: 1;
+        padding: 12px 16px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        font-size: 1rem;
+    }
+
+    .ais-SearchBox-submit,
+    .ais-SearchBox-reset {
+        padding: 0 16px;
+    }
+
+    .ais-Stats {
+        margin: 1rem 0;
+        font-size: 0.9rem;
+        color: #666;
+    }
+
+    .ais-RefinementList-item {
+        margin-bottom: 0.5rem;
+    }
+
+    .ais-RefinementList-checkbox {
+        margin-right: 8px;
+    }
+
+    .ais-Pagination-list {
+        display: flex;
+        justify-content: center;
+        list-style-type: none;
+        padding: 0;
+        margin: 2rem 0 0;
+    }
+
+    .ais-Pagination-item {
+        margin: 0 4px;
+    }
+
+    .ais-Pagination-link {
+        padding: 6px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        text-decoration: none;
+        color: #333;
+    }
+
+    .ais-Pagination-item--selected .ais-Pagination-link {
+        background-color: #8c1a1a;
+        color: white;
+        border-color: #8c1a1a;
+    }
+
+    .ais-ClearRefinements {
+        margin-top: 1.5rem;
+    }
+
+    .ais-ClearRefinements-button {
+        width: 100%;
+        padding: 8px 16px;
+        background-color: #f0f0f0;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 0.9rem;
+        cursor: pointer;
+    }
+
+    .ais-ClearRefinements-button--disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    /* Make InstantSearch work better on mobile */
+    @media (max-width: 768px) {
+        .hit-content {
+            grid-template-columns: 80px 1fr;
         }
     }
 </style>
