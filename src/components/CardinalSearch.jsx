@@ -164,17 +164,6 @@ export default function CardinalSearch() {
       }),
 
       rangeSlider({
-        container: "#papabile-rating",
-        attribute: "papabileRating",
-        min: 1,
-        max: 10,
-        precision: 1,
-        templates: {
-          header: () => "<h3>Papabile Rating</h3>",
-        },
-      }),
-
-      rangeSlider({
         container: "#age-range",
         attribute: "age",
         templates: {
@@ -209,11 +198,19 @@ export default function CardinalSearch() {
       <div className="search-panel">
         <div className="search-panel__filters">
           <h2>Filter Cardinals</h2>
+          <h3>By Region</h3>
           <div id="region-list"></div>
+
+          <h3>By Country</h3>
           <div id="country-list"></div>
+
+          <h3>By Cardinal Type</h3>
           <div id="cardinal-type-list"></div>
+
+          <h3>Appointed By</h3>
           <div id="appointed-by-list"></div>
-          <div id="papabile-rating"></div>
+
+          <h3>By Age</h3>
           <div id="age-range"></div>
           <div id="clear-refinements"></div>
         </div>
